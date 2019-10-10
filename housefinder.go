@@ -27,7 +27,7 @@ func Init() *Server {
 		GoServer: &goserver.GoServer{},
 		houses:   []int32{int32(17187297)},
 	}
-	s.getter = &prodGetter{s.HttpGet}
+	s.getter = &prodGetter{s.HTTPGet}
 	return s
 }
 
