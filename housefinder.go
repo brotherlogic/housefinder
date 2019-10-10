@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"time"
 
 	"github.com/brotherlogic/goserver"
 	"golang.org/x/net/context"
@@ -16,13 +17,17 @@ import (
 //Server main server type
 type Server struct {
 	*goserver.GoServer
+	houses []int32
+	getter
 }
 
 // Init builds the server
 func Init() *Server {
 	s := &Server{
-		&goserver.GoServer{},
+		GoServer: &goserver.GoServer{},
+		houses:   []int32{int32(17187297)},
 	}
+	s.getter = &prodGetter{s.HttpGet}
 	return s
 }
 
@@ -51,6 +56,29 @@ func (s *Server) GetState() []*pbg.State {
 	return []*pbg.State{}
 }
 
+type getter interface {
+	get(ctx context.Context, url string) (string, error)
+}
+
+type prodGetter struct {
+	httpGet func(ctx context.Context, url string) (string, error)
+}
+
+func (p *prodGetter) get(ctx context.Context, url string) (string, error) {
+	return p.httpGet(ctx, url)
+}
+
+func (s *Server) processHouses(ctx context.Context) error {
+	for _, house := range s.houses {
+		err := s.processHouse(ctx, house)
+		if err != nil {
+			return err
+		}
+		time.Sleep(time.Minute)
+	}
+	return nil
+}
+
 func main() {
 	var quiet = flag.Bool("quiet", false, "Show all output")
 	flag.Parse()
@@ -69,6 +97,8 @@ func main() {
 	if err != nil {
 		log.Fatalf("Registration Error: %v", err)
 	}
+
+	server.RegisterRepeatingTask(server.processHouses, "process_houses", time.Minute*10)
 
 	fmt.Printf("%v", server.Serve())
 }
