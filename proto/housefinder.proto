@@ -1,0 +1,20 @@
+syntax = "proto3";
+
+package housefinder;
+
+message Config {
+  int64 last_run = 1;
+  map<int32, HouseHistory> full_history = 2;
+}
+
+message HousePrice {
+  int32 id = 1;
+  int32 listed = 2;
+  int32 estimate = 3;
+  int64 date = 4;
+}
+
+message HouseHistory {
+  int32 id = 1;
+  repeated HousePrice history = 2;
+}

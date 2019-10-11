@@ -98,7 +98,7 @@ func main() {
 		log.Fatalf("Registration Error: %v", err)
 	}
 
-	server.RegisterRepeatingTask(server.processHouses, "process_houses", time.Minute*10)
+	server.RegisterRepeatingTask(server.processHouses, "process_houses", time.Hour)
 
 	fmt.Printf("%v", server.Serve())
 }
