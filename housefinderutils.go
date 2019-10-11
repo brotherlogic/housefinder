@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"time"
 
 	"golang.org/x/net/context"
 
@@ -17,5 +18,6 @@ func (s *Server) processHouse(ctx context.Context, number int32) error {
 	stats, _ := redfinlib.Extract(body)
 	s.Log(fmt.Sprintf("Got %+v", stats))
 
-	return nil
+	s.config.LastRun = time.Now().Unix()
+	return s.save(ctx)
 }

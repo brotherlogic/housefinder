@@ -12,6 +12,12 @@ import (
 	"google.golang.org/grpc"
 
 	pbg "github.com/brotherlogic/goserver/proto"
+	pb "github.com/brotherlogic/housefinder/proto"
+)
+
+const (
+	// KEY - where the config is stored
+	KEY = "/github.com/brotherlogic/housefinder/config"
 )
 
 //Server main server type
@@ -19,6 +25,7 @@ type Server struct {
 	*goserver.GoServer
 	houses []int32
 	getter
+	config *pb.Config
 }
 
 // Init builds the server
@@ -28,6 +35,7 @@ func Init() *Server {
 		houses:   []int32{int32(17187297)},
 	}
 	s.getter = &prodGetter{s.HTTPGet}
+	s.config = &pb.Config{}
 	return s
 }
 
@@ -48,12 +56,33 @@ func (s *Server) Shutdown(ctx context.Context) error {
 
 // Mote promotes/demotes this server
 func (s *Server) Mote(ctx context.Context, master bool) error {
+	if master {
+		return s.load(ctx)
+	}
+
+	return nil
+}
+
+func (s *Server) save(ctx context.Context) error {
+	return s.KSclient.Save(ctx, KEY, s.config)
+}
+
+func (s *Server) load(ctx context.Context) error {
+	config := &pb.Config{}
+	data, _, err := s.KSclient.Read(ctx, KEY, config)
+	if err != nil {
+		return err
+	}
+	config = data.(*pb.Config)
+
 	return nil
 }
 
 // GetState gets the state of the server
 func (s *Server) GetState() []*pbg.State {
-	return []*pbg.State{}
+	return []*pbg.State{
+		&pbg.State{Key: "last_run", Value: s.config.LastRun},
+	}
 }
 
 type getter interface {
