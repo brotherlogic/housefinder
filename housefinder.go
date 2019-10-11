@@ -12,6 +12,7 @@ import (
 	"google.golang.org/grpc"
 
 	pbg "github.com/brotherlogic/goserver/proto"
+	"github.com/brotherlogic/goserver/utils"
 	pb "github.com/brotherlogic/housefinder/proto"
 )
 
@@ -75,12 +76,17 @@ func (s *Server) load(ctx context.Context) error {
 	}
 	config = data.(*pb.Config)
 
+	if config.FullHistory == nil {
+		config.FullHistory = make(map[int32]*pb.HouseHistory)
+	}
+
 	return nil
 }
 
 // GetState gets the state of the server
 func (s *Server) GetState() []*pbg.State {
 	return []*pbg.State{
+		&pbg.State{Key: "tracked", Value: int64(len(s.config.FullHistory))},
 		&pbg.State{Key: "last_run", Value: s.config.LastRun},
 	}
 }
@@ -110,6 +116,7 @@ func (s *Server) processHouses(ctx context.Context) error {
 
 func main() {
 	var quiet = flag.Bool("quiet", false, "Show all output")
+	var init = flag.Bool("init", false, "Prep server")
 	flag.Parse()
 
 	//Turn off logging
@@ -125,6 +132,16 @@ func main() {
 	err := server.RegisterServer("housefinder", false)
 	if err != nil {
 		log.Fatalf("Registration Error: %v", err)
+	}
+
+	if *init {
+		ctx, cancel := utils.BuildContext("housefinder", "housefinder")
+		defer cancel()
+
+		server.config.LastRun = time.Now().Unix()
+		err := server.save(ctx)
+		fmt.Printf("%v\n", err)
+		return
 	}
 
 	server.RegisterRepeatingTask(server.processHouses, "process_houses", time.Hour)
