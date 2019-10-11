@@ -61,11 +61,11 @@ type getter interface {
 }
 
 type prodGetter struct {
-	httpGet func(ctx context.Context, url string) (string, error)
+	httpGet func(ctx context.Context, url string, header string) (string, error)
 }
 
 func (p *prodGetter) get(ctx context.Context, url string) (string, error) {
-	return p.httpGet(ctx, url)
+	return p.httpGet(ctx, url, "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/77.0.3865.120 Safari/537.36")
 }
 
 func (s *Server) processHouses(ctx context.Context) error {
