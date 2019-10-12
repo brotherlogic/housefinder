@@ -46,6 +46,21 @@ func TestProcess(t *testing.T) {
 	}
 }
 
+func TestProcessDone(t *testing.T) {
+	s := InitTest()
+	s.config.FullHistory[int32(123)] = &pb.HouseHistory{History: []*pb.HousePrice{&pb.HousePrice{Sold: true}}}
+
+	err := s.processHouse(context.Background(), int32(123))
+
+	if err != nil {
+		t.Errorf("Error processing house")
+	}
+
+	if len(s.config.FullHistory[int32(123)].History) != 1 {
+		t.Errorf("History added")
+	}
+}
+
 func TestProcessReadFail(t *testing.T) {
 	s := InitTest()
 	s.getter = &testGetter{fail: true}

@@ -12,6 +12,7 @@ message HousePrice {
   int32 listed = 2;
   int32 estimate = 3;
   int64 date = 4;
+  bool sold = 5;
 }
 
 message HouseHistory {
