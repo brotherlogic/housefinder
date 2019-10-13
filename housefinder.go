@@ -80,6 +80,8 @@ func (s *Server) load(ctx context.Context) error {
 		config.FullHistory = make(map[int32]*pb.HouseHistory)
 	}
 
+	s.config = config
+
 	return nil
 }
 
