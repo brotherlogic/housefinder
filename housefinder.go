@@ -88,6 +88,7 @@ func (s *Server) load(ctx context.Context) error {
 // GetState gets the state of the server
 func (s *Server) GetState() []*pbg.State {
 	return []*pbg.State{
+		&pbg.State{Key: "curr", Text: fmt.Sprintf("curr %v", s.config.FullHistory)},
 		&pbg.State{Key: "tracked", Value: int64(len(s.config.FullHistory))},
 		&pbg.State{Key: "last_run", Value: s.config.LastRun},
 	}
