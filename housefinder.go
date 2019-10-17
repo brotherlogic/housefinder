@@ -33,7 +33,7 @@ type Server struct {
 func Init() *Server {
 	s := &Server{
 		GoServer: &goserver.GoServer{},
-		houses:   []int32{int32(17187297)},
+		houses:   []int32{int32(17187297), int32(709295)},
 	}
 	s.getter = &prodGetter{s.HTTPGet}
 	s.config = &pb.Config{}
@@ -88,7 +88,6 @@ func (s *Server) load(ctx context.Context) error {
 // GetState gets the state of the server
 func (s *Server) GetState() []*pbg.State {
 	return []*pbg.State{
-		&pbg.State{Key: "curr", Text: fmt.Sprintf("curr %v", s.config.FullHistory)},
 		&pbg.State{Key: "tracked", Value: int64(len(s.config.FullHistory))},
 		&pbg.State{Key: "last_run", Value: s.config.LastRun},
 	}
