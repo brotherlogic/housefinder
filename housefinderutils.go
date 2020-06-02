@@ -9,6 +9,16 @@ import (
 	pb "github.com/brotherlogic/housefinder/proto"
 	redfinlib "github.com/brotherlogic/redfinlib"
 	pbrf "github.com/brotherlogic/redfinlib/proto"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promauto"
+)
+
+var (
+	//Backlog - the print queue
+	price = promauto.NewGaugeVec(prometheus.GaugeOpts{
+		Name: "housefinder_price",
+		Help: "The size of the print queue",
+	}, []string{"house"})
 )
 
 func (s *Server) processHouse(ctx context.Context, number int32) error {
@@ -29,6 +39,7 @@ func (s *Server) processHouse(ctx context.Context, number int32) error {
 	stats, _ := redfinlib.Extract(body)
 	s.Log(fmt.Sprintf("Got %+v", stats))
 
+	price.With(prometheus.Labels{"house": fmt.Sprintf("%v", number)}).Set(float64(stats.CurrentEstimate))
 	housePrice := &pb.HousePrice{
 		Id:       number,
 		Listed:   stats.CurrentPrice,
