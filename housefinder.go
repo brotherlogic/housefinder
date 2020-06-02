@@ -33,7 +33,7 @@ type Server struct {
 func Init() *Server {
 	s := &Server{
 		GoServer: &goserver.GoServer{},
-		houses:   []int32{int32(17187297), int32(709295), int32(1783706), int32(686053), int32(1141340)},
+		houses:   []int32{int32(1993678)},
 	}
 	s.getter = &prodGetter{s.HTTPGet}
 	s.config = &pb.Config{}
