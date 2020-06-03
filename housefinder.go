@@ -131,9 +131,9 @@ func main() {
 	server.Register = server
 	server.RPCTracing = true
 
-	err := server.RegisterServer("housefinder", false)
+	err := server.RegisterServerV2("housefinder", false, false)
 	if err != nil {
-		log.Fatalf("Registration Error: %v", err)
+		return
 	}
 
 	if *init {
