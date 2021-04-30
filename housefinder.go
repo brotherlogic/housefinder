@@ -26,7 +26,6 @@ type Server struct {
 	*goserver.GoServer
 	houses []int32
 	getter
-	config *pb.Config
 }
 
 // Init builds the server
@@ -36,7 +35,6 @@ func Init() *Server {
 		houses:   []int32{int32(1054537)},
 	}
 	s.getter = &prodGetter{s.HTTPGet}
-	s.config = &pb.Config{}
 	return s
 }
 
@@ -57,22 +55,18 @@ func (s *Server) Shutdown(ctx context.Context) error {
 
 // Mote promotes/demotes this server
 func (s *Server) Mote(ctx context.Context, master bool) error {
-	if master {
-		return s.load(ctx)
-	}
-
 	return nil
 }
 
-func (s *Server) save(ctx context.Context) error {
-	return s.KSclient.Save(ctx, KEY, s.config)
+func (s *Server) save(ctx context.Context, config *pb.Config) error {
+	return s.KSclient.Save(ctx, KEY, config)
 }
 
-func (s *Server) load(ctx context.Context) error {
+func (s *Server) load(ctx context.Context) (*pb.Config, error) {
 	config := &pb.Config{}
 	data, _, err := s.KSclient.Read(ctx, KEY, config)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	config = data.(*pb.Config)
 
@@ -80,17 +74,12 @@ func (s *Server) load(ctx context.Context) error {
 		config.FullHistory = make(map[int32]*pb.HouseHistory)
 	}
 
-	s.config = config
-
-	return nil
+	return config, nil
 }
 
 // GetState gets the state of the server
 func (s *Server) GetState() []*pbg.State {
-	return []*pbg.State{
-		&pbg.State{Key: "tracked", Value: int64(len(s.config.FullHistory))},
-		&pbg.State{Key: "last_run", Value: s.config.LastRun},
-	}
+	return []*pbg.State{}
 }
 
 type getter interface {
@@ -118,7 +107,6 @@ func (s *Server) processHouses(ctx context.Context) error {
 
 func main() {
 	var quiet = flag.Bool("quiet", false, "Show all output")
-	var init = flag.Bool("init", false, "Prep server")
 	flag.Parse()
 
 	//Turn off logging
@@ -132,16 +120,6 @@ func main() {
 
 	err := server.RegisterServerV2("housefinder", false, true)
 	if err != nil {
-		return
-	}
-
-	if *init {
-		ctx, cancel := utils.BuildContext("housefinder", "housefinder")
-		defer cancel()
-
-		server.config.LastRun = time.Now().Unix()
-		err := server.save(ctx)
-		fmt.Printf("%v\n", err)
 		return
 	}
 

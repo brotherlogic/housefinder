@@ -22,8 +22,12 @@ var (
 )
 
 func (s *Server) processHouse(ctx context.Context, number int32) error {
+	config, err := s.load(ctx)
+	if err != nil {
+		return err
+	}
 	// Don't process a sold house.
-	if val, ok := s.config.FullHistory[number]; ok {
+	if val, ok := config.FullHistory[number]; ok {
 		for _, hist := range val.History {
 			if hist.Sold {
 				return nil
@@ -47,13 +51,13 @@ func (s *Server) processHouse(ctx context.Context, number int32) error {
 		Date:     time.Now().Unix(),
 		Sold:     stats.State == pbrf.Stats_SOLD}
 
-	s.config.LastRun = time.Now().Unix()
+	config.LastRun = time.Now().Unix()
 
-	if _, ok := s.config.FullHistory[number]; ok {
-		s.config.FullHistory[number].History = append(s.config.FullHistory[number].History, housePrice)
+	if _, ok := config.FullHistory[number]; ok {
+		config.FullHistory[number].History = append(config.FullHistory[number].History, housePrice)
 	} else {
-		s.config.FullHistory[number] = &pb.HouseHistory{Id: number, History: []*pb.HousePrice{housePrice}}
+		config.FullHistory[number] = &pb.HouseHistory{Id: number, History: []*pb.HousePrice{housePrice}}
 	}
 
-	return s.save(ctx)
+	return s.save(ctx, config)
 }
