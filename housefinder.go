@@ -129,9 +129,8 @@ func main() {
 	server := Init()
 	server.PrepServer()
 	server.Register = server
-	server.RPCTracing = true
 
-	err := server.RegisterServerV2("housefinder", false, false)
+	err := server.RegisterServerV2("housefinder", false, true)
 	if err != nil {
 		return
 	}
@@ -146,7 +145,15 @@ func main() {
 		return
 	}
 
-	server.RegisterRepeatingTask(server.processHouses, "process_houses", time.Hour)
+	go func() {
+		for true {
+			ctx, cancel := utils.BuildContext("hf", "hf")
+			server.processHouses(ctx)
+			cancel()
+
+			time.Sleep(time.Minute * 30)
+		}
+	}()
 
 	fmt.Printf("%v", server.Serve())
 }
